@@ -9,22 +9,22 @@
 The Image Processing Scheduler is tracking the status of processing jobs taking place both on the Neural Network Manager(NNM) Master and NNM Clients. As images are sent to to be processed, the status of the connected NNMs will be checked to find out what one will be available soonest.  This information will be tracked within the processingQueues array.
 
 >  **Entities**
->processingQueue[] : processingQueues
-> int : queueCursor
+>processingQueue[] : processingQueues<br>
+> int : queueCursor<br>
 > 
-> void : addImage(int _queueIndex)
-> void : removeImage(int _queueIndex, int _imageIndex)
+> void : addImage(int _queueIndex)<br>
+> void : removeImage(int _queueIndex, int _imageIndex)<br>
 
 ### Image Processing Queue
 The Image Processing Queue maintains the queue of images that are to be processed. It is responsible for passing images into the Neural Network and Emailing the resultant image to the user that submitted the image.
 
 >  **Entities**
->image[] : imageQueue
+>image[] : imageQueue <br>
 > 
-> queueStatus : getStatus()
-> void : addImage()
-> void : removeImage(int _imageIndex)
-> childProcess : processImage(image _imageToBeProcessed
+> queueStatus : getStatus()<br>
+> void : addImage()<br>
+> void : removeImage(int _imageIndex)<br>
+> childProcess : processImage(image _imageToBeProcessed<br>
 
 ### More Be Added
 
