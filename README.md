@@ -1,10 +1,7 @@
 
 
 # SketchFoo Neural Network Manager
---------------------------------
 ## Classes
-----------
-
 ### Image Processing Scheduler
 The Image Processing Scheduler is tracking the status of processing jobs taking place both on the Neural Network Manager(NNM) Master and NNM Clients. As images are sent to to be processed, the status of the connected NNMs will be checked to find out what one will be available soonest.  This information will be tracked within the processingQueues array.
 
