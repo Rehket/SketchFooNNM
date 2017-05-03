@@ -1,0 +1,1 @@
+mongod -f "D:\Workspace\AppWinDataService\config.conf"

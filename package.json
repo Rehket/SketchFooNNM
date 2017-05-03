@@ -1,0 +1,22 @@
+{
+  "name": "sketchfoonnm",
+  "version": "0.0.1",
+  "description": "SketchFoo Neural Network Manager ",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Rehket/SketchFooNNM.git"
+  },
+  "author": "Adam Albright",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Rehket/SketchFooNNM/issues"
+  },
+  "homepage": "https://github.com/Rehket/SketchFooNNM#readme",
+  "dependencies": {
+    "express": "^4.15.2"
+  }
+}
