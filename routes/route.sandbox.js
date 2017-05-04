@@ -3,6 +3,8 @@
  * This is a location to experiment with routing before implementing.
  */
 
+'use strict';
+
 var express = require('express');
 var router = express.Router();
 var moment = require('moment');
