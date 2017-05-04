@@ -5,11 +5,11 @@
 
 var express = require('express');
 var router = express.Router();
-
+var moment = require('moment');
 
 router.use(function timeLog (req, res, next) {
     var today = new Date();
-    console.log('Time: ', today.getHours()%12);
+    console.log('Time: ', moment().format());
     next()
 });
 
