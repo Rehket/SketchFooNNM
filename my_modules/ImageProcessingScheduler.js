@@ -3,10 +3,15 @@
  * TODO: Complete Class Diagram for this class and implement
  */
 'use strict';
+const imageProcessingQueue = require('./ImageProcessingQueue');
+//Import Sharp??
 
 class ImageProcessingScheduler{
 
-    constructor(){}
+    constructor(){
+        this.imageQueue = new imageProcessingQueue();
+
+    }
 
     //Add Image
     addImageToQueue(){}
@@ -14,3 +19,5 @@ class ImageProcessingScheduler{
     //Process The Image
     processImage(){}
 }
+
+module.exports = ImageProcessingScheduler;
