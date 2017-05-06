@@ -21,7 +21,11 @@ router.get('/', function(req, res){
 });
 
 router.post('/image', function(req, res){
-    console.log('Called Image Post!')
+
+    console.log('Called Image Post!');
+    console.log(req.body);
+    res.status(201);
+    res.json([{message: 'Got It...'}])
 });
 
 module.exports = router;
