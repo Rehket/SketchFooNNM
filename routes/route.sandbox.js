@@ -9,6 +9,7 @@ const express = require('express');
 const router = express.Router();
 const moment = require('moment');
 const sharp = require('sharp');
+const bp = require('body-parser');
 
 router.use(function timeLog (req, res, next) {
     let today = new Date();
@@ -20,10 +21,17 @@ router.get('/', function(req, res){
     res.send('You are in the sandbox!');
 });
 
-router.post('/image', function(req, res){
+let rawParse = bp.raw({type: 'application/*'});
+
+
+router.post('/image', rawParse, function(req, res){
 
     console.log('Called Image Post!');
-    console.log(req.body);
+    sharp(req.body)
+        .png()
+        .toFile('Output.png', function (err, info) {
+
+        });
     res.status(201);
     res.json([{message: 'Got It...'}])
 });
