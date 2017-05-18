@@ -28,12 +28,18 @@ router.post('/image', rawParse, function(req, res){
 
     console.log('Called Image Post!');
     sharp(req.body)
+        .resize(undefined, 512, {
+            kernel: sharp.kernel.lanczos2,
+            interpolator: sharp.interpolator.nohalo
+        })
+        .background('white')
         .png()
         .toFile('Output.png', function (err, info) {
 
         });
     res.status(201);
-    res.json([{message: 'Got It...'}])
+    res.json([{message: 'Got It...'}]);
+
 });
 
 module.exports = router;
