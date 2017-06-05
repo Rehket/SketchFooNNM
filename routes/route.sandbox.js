@@ -10,6 +10,8 @@ const router = express.Router();
 const moment = require('moment');
 const sharp = require('sharp');
 const bp = require('body-parser');
+const exec = require('child_process').exec;
+
 
 router.use(function timeLog (req, res, next) {
     let today = new Date();
@@ -35,8 +37,10 @@ router.post('/image', rawParse, function(req, res){
         .background('white')
         .png()
         .toFile('Output.png', function (err, info) {
-
         });
+
+
+
     res.status(201);
     res.json([{message: 'Got It...'}]);
 
