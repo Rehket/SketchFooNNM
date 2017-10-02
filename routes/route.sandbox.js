@@ -57,7 +57,17 @@ router.post('/image', function(req, res, next){
         console.log("File Saved!!");
         let startNN = spawn('DATA_ROOT=/home/adama/WebstormProjects/SketchFooNNM/uploads ' +
             'name=cuhk_faces which_direction=AtoB phase=val th /home/adama/pix2pix/test.lua');
-        startNN.stdout.on()
+        startNN.stdout.on('data', (data) => {
+            console.log(`stdout: ${data}`);
+        });
+
+        startNN.stderr.on('data', (data) => {
+            console.log(`stderr: ${data}`);
+        });
+
+        startNN.on('close', (code) => {
+            console.log(`child process exited with code ${code}`);
+        });
     });
 
     console.log('Called Image Post!');
