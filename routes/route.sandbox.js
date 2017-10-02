@@ -55,7 +55,9 @@ router.post('/image', function(req, res, next){
     let buf = new Buffer(data, 'base64');
     fs.writeFile('uploads/image.jpeg', buf, function(){
         console.log("File Saved!!");
-        spawn.child_process();
+        let startNN = spawn('DATA_ROOT=/home/adama/WebstormProjects/SketchFooNNM/uploads ' +
+            'name=cuhk_faces which_direction=AtoB phase=val th /home/adama/pix2pix/test.lua');
+        startNN.stdout.on()
     });
 
     console.log('Called Image Post!');
