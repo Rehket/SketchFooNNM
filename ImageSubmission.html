@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+
+<head>
+    <meta charset="utf-8">
+    <title>Resize HTML5 canvas dynamically</title>
+    <style>
+        html, body {
+            width: 100%;
+            height: 100%;
+            margin: 0px;
+            border: 0;
+            overflow: hidden; /*  Disable scrollbars */
+            display: block;  /* No floating content on sides */
+        }
+    </style>
+    <script src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
+</head>
+
+<body>
+<form   ref='uploadForm'
+        id='uploadForm'
+        encType="multipart/form-data">
+
+    <input type="hidden" name="image" id="image"/>
+    <input type='submit' value='Upload!' id="subButton" />
+</form>
+
+<label>Image File:</label><br/>
+<input type="file" id="imageLoader" name="imageLoader"/>
+
+<canvas id='myCanvas' style='position:absolute; left:0px; top:100px;'></canvas>
+
+</body>
+
+<script>
+    let myCanvas = document.getElementById('myCanvas');
+    let myContext = myCanvas.getContext('2d');
+    myCanvas.width = myCanvas.height = 286;
+
+    let resized = 0;
+
+    // Add Event Listeners
+    let subButton = document.getElementById('subButton');
+    subButton.addEventListener('click', submitImage, false);
+    let imageLoader = document.getElementById('imageLoader');
+    imageLoader.addEventListener('change', handleImage, false);
+
+    myCanvas.addEventListener('click', resizeCanvas, false);
+
+
+
+
+
+    // Init the Canvas
+    redraw();
+
+    //Not Working
+    function submitImage() {
+        console.log('Submit image called...');
+
+        let meh = myCanvas.toDataURL('image/jpeg', 1.0);
+        document.getElementById('image').value = meh;
+
+        //console.log($('#uploadForm').serialize());
+
+      $.ajax({
+            type: "POST",
+            url: 'http://localhost:3000/sandbox/image',
+            data: $("#uploadForm").serialize(),
+            dataType: 'multipart/form-data'
+        });
+    }
+
+    // Prep the image by saving it to the form.
+    function prepImage() {
+        console.log('Prep Image Called...');
+        let subImage = new Image();
+        subImage.src = myCanvas.toDataURL('image/jpeg', 1.0);
+        subImage.onload = function(){
+            document.getElementById('image').value = subImage;
+        };
+
+    }
+
+    function redraw() {
+        console.log('Redraw called...');
+        myContext.fillStyle = '#ffffff';
+        myContext.fillRect(0, 0, myCanvas.width, myCanvas.height);
+        myContext.rect(0, 0, myCanvas.width, myCanvas.height);
+    }
+
+    function handleImage(e){
+        let reader = new FileReader();
+        reader.onload = function(event){
+            let img = new Image();
+            img.onload = function(){
+                //htmlCanvas.width = img.width;
+                //htmlCanvas.height = img.height;
+                myContext.drawImage(img,0,0, myCanvas.width, myCanvas.height);
+            };
+            img.src = event.target.result;
+        };
+        reader.readAsDataURL(e.target.files[0]);
+    }
+
+    function resizeCanvas(e) {
+            let data = myCanvas.toDataURL();
+
+
+            myCanvas.width = myCanvas.width*2;
+
+
+            let myImage = new Image();
+
+            myImage.src = data;
+            myImage.onload = function(){
+                myContext.fillStyle = '#000000';
+                myContext.fillRect(0, 0, myCanvas.width, myCanvas.height);
+                myContext.rect(0, 0, myCanvas.width, myCanvas.height);
+                myContext.drawImage(myImage, 0, 0);
+            };
+
+
+
+
+    }
+
+
+
+</script>

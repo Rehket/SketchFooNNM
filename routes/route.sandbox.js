@@ -36,24 +36,24 @@ let storage = multer.diskStorage({
         cb(null, 'uploads/')
     },
     filename: function (req, file, cb) {
-        cb(null, file.fieldname + '-' + Date.now() + '.png')
+        cb(null, file.fieldname + '-' + Date.now() + '.jpeg')
     }
 });
 
 const upload = multer({ storage: storage});
 
-router.post('/image',upload.single('image'), function(req, res, next){
+router.post('/image',upload.single(), function(req, res, next){
 
-    if (!req.file)
-        return res.status(400).send('No files were uploaded.');
+    //if (!req.file)
+        //return res.status(400).send('No files were uploaded.');
 
 
-    console.log(req.file);
+    console.log(req.body);
 
     console.log('Called Image Post!');
     // Use the mv() method to place the file somewhere on your server
-        res.status(201);
-        res.json([{message: 'Got It...'}]);
+        //res.status(201);
+        //res.json([{message: 'Got It...'}]);
 
 
 });

@@ -27,6 +27,10 @@
     <input type="hidden" name="image" id="image" value=""/>
     <input type='submit' value='Upload!' />
 </form>
+
+<label>Image File:</label><br/>
+<input type="file" id="imageLoader" name="imageLoader"/>
+
 <canvas id='c' style='position:absolute; left:0px; top:100px;'>
 </canvas>
 
@@ -38,6 +42,24 @@
         htmlCanvas = document.getElementById('c'),
         // Obtain a graphics context on the canvas element for drawing.
         context = htmlCanvas.getContext('2d');
+
+
+    let imageLoader = document.getElementById('imageLoader');
+    imageLoader.addEventListener('change', handleImage, false);
+
+    function handleImage(e){
+        let reader = new FileReader();
+        reader.onload = function(event){
+            let img = new Image();
+            img.onload = function(){
+                //htmlCanvas.width = img.width;
+                //htmlCanvas.height = img.height;
+                context.drawImage(img,0,0);
+            };
+            img.src = event.target.result;
+        };
+        reader.readAsDataURL(e.target.files[0]);
+    }
 
 
     function prepImage() {
@@ -79,10 +101,10 @@
         // Display custom canvas. In this case it's a blue, 5 pixel
         // border that resizes along with the browser window.
         function redraw() {
-            context.color = '#000000';
+            context.color = '#ff8161';
             context.strokeStyle = '#0000ff';
             context.lineWidth = '5';
-            context.fillStyle = '#000000';
+            context.fillStyle = '#a35eff';
             context.fillRect(0, 0, htmlCanvas.width, htmlCanvas.height);
             context.rect(0, 0, htmlCanvas.width, htmlCanvas.height);
         }
