@@ -9,15 +9,15 @@
 const express = require('express');
 const router = express.Router();
 const moment = require('moment');
-//const bp = require('body-parser');
+const bp = require('body-parser');
 const fs = require('fs');
 const path = require('path');
 const exec = require('child_process').exec;
 //const fileUpload = require('express-fileupload');
-const multer  = require('multer');
+//const multer  = require('multer');
 
 
-//router.use(fileUpload());
+router.use(bp());
 
 router.use(function timeLog (req, res, next) {
     let today = new Date();
@@ -31,7 +31,7 @@ router.get('/', function(req, res){
 
 //let rawParse = bp.raw({type: 'application/*'});
 
-let storage = multer.diskStorage({
+/*let storage = multer.diskStorage({
     destination: function (req, file, cb) {
         cb(null, 'uploads/')
     },
@@ -41,19 +41,25 @@ let storage = multer.diskStorage({
 });
 
 const upload = multer({ storage: storage});
+*/
 
-router.post('/image',upload.single(), function(req, res, next){
+router.post('/image', function(req, res, next){
 
     //if (!req.file)
         //return res.status(400).send('No files were uploaded.');
 
 
-    console.log(req.body);
+    console.log(req.body.image);
+    let data = req.body.image.replace(/^data:image\/\w+;base64,/, "");
+    let buf = new Buffer(data, 'base64');
+    fs.writeFile('uploads/image.jpeg', buf, function(){
+        console.log("File Saved!!");
+    });
 
     console.log('Called Image Post!');
     // Use the mv() method to place the file somewhere on your server
-        //res.status(201);
-        //res.json([{message: 'Got It...'}]);
+        res.status(201);
+        res.json([{message: 'Got It...'}]);
 
 
 });
