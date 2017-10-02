@@ -1,6 +1,7 @@
 /**
  * Created by adama on 5/3/2017.
  * This is a location to experiment with routing before implementing.
+ * We are using https://www.npmjs.com/package/multer
  */
 
 'use strict';
@@ -8,10 +9,15 @@
 const express = require('express');
 const router = express.Router();
 const moment = require('moment');
-const sharp = require('sharp');
-const bp = require('body-parser');
+//const bp = require('body-parser');
+const fs = require('fs');
+const path = require('path');
 const exec = require('child_process').exec;
+//const fileUpload = require('express-fileupload');
+const multer  = require('multer');
+const upload = multer({ dest: 'uploads/' })
 
+//router.use(fileUpload());
 
 router.use(function timeLog (req, res, next) {
     let today = new Date();
@@ -23,26 +29,21 @@ router.get('/', function(req, res){
     res.send('You are in the sandbox!');
 });
 
-let rawParse = bp.raw({type: 'application/*'});
+//let rawParse = bp.raw({type: 'application/*'});
 
 
-router.post('/image', rawParse, function(req, res){
+router.post('/image',upload.single('image'), function(req, res, next){
+
+    if (!req.file)
+        return res.status(400).send('No files were uploaded.');
+
+    console.log(req.file);
 
     console.log('Called Image Post!');
-    sharp(req.body)
-        .resize(undefined, 512, {
-            kernel: sharp.kernel.lanczos2,
-            interpolator: sharp.interpolator.nohalo
-        })
-        .background('white')
-        .png()
-        .toFile('Output.png', function (err, info) {
-        });
+    // Use the mv() method to place the file somewhere on your server
+        res.status(201);
+        res.json([{message: 'Got It...'}]);
 
-
-
-    res.status(201);
-    res.json([{message: 'Got It...'}]);
 
 });
 
