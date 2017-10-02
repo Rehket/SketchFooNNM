@@ -15,7 +15,7 @@ const path = require('path');
 const exec = require('child_process').exec;
 //const fileUpload = require('express-fileupload');
 const multer  = require('multer');
-const upload = multer({ dest: 'uploads/' })
+
 
 //router.use(fileUpload());
 
@@ -31,11 +31,22 @@ router.get('/', function(req, res){
 
 //let rawParse = bp.raw({type: 'application/*'});
 
+let storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, 'uploads/')
+    },
+    filename: function (req, file, cb) {
+        cb(null, file.fieldname + '-' + Date.now() + '.png')
+    }
+});
+
+const upload = multer({ storage: storage});
 
 router.post('/image',upload.single('image'), function(req, res, next){
 
     if (!req.file)
         return res.status(400).send('No files were uploaded.');
+
 
     console.log(req.file);
 
