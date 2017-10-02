@@ -55,7 +55,7 @@ router.post('/image', function(req, res, next){
     let buf = new Buffer(data, 'base64');
     fs.writeFile('uploads/image.jpeg', buf, function(){
         console.log("File Saved!!");
-        spawn.child_process();
+        spawn.child_process('');
     });
 
     console.log('Called Image Post!');
