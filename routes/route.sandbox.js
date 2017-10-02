@@ -13,7 +13,6 @@ const bp = require('body-parser');
 const fs = require('fs');
 const path = require('path');
 const exec = require('child_process').exec;
-const { spawn } = require('child_process');
 //const fileUpload = require('express-fileupload');
 //const multer  = require('multer');
 
@@ -53,20 +52,16 @@ router.post('/image', function(req, res, next){
     console.log(req.body.image);
     let data = req.body.image.replace(/^data:image\/\w+;base64,/, "");
     let buf = new Buffer(data, 'base64');
-    fs.writeFile('uploads/image.jpeg', buf, function(){
+    fs.writeFile('uploads/val/image.jpeg', buf, function(){
         console.log("File Saved!!");
-        let startNN = spawn('DATA_ROOT=/home/adama/WebstormProjects/SketchFooNNM/uploads ' +
-            'name=cuhk_faces which_direction=AtoB phase=val th /home/adama/pix2pix/test.lua');
-        startNN.stdout.on('data', (data) => {
-            console.log(`stdout: ${data}`);
-        });
-
-        startNN.stderr.on('data', (data) => {
-            console.log(`stderr: ${data}`);
-        });
-
-        startNN.on('close', (code) => {
-            console.log(`child process exited with code ${code}`);
+        let startNN = exec('DATA_ROOT=/home/adama/WebstormProjects/SketchFooNNM/uploads ' +
+            'name=cuhk_faces which_direction=AtoB phase=val th /home/adama/pix2pix/test.lua', (error, stdout, stderr) => {
+            if (error) {
+                console.error(`exec error: ${error}`);
+                return;
+            }
+            console.log(`stdout: ${stdout}`);
+            console.log(`stderr: ${stderr}`);
         });
     });
 
