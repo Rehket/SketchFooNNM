@@ -65,8 +65,8 @@
 
       $.ajax({
             type: "POST",
-            url: 'http://localhost:3000/sandbox/image',
-            data: $("#uploadForm").serialize(),
+            url: 'http://rehket.asuscomm.com:3000/sandbox/image',
+            data: {image: meh},
             dataType: 'multipart/form-data'
         });
     }

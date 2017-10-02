@@ -13,6 +13,7 @@ const bp = require('body-parser');
 const fs = require('fs');
 const path = require('path');
 const exec = require('child_process').exec;
+const { spawn } = require('child_process');
 //const fileUpload = require('express-fileupload');
 //const multer  = require('multer');
 
@@ -54,6 +55,7 @@ router.post('/image', function(req, res, next){
     let buf = new Buffer(data, 'base64');
     fs.writeFile('uploads/image.jpeg', buf, function(){
         console.log("File Saved!!");
+        spawn.child_process();
     });
 
     console.log('Called Image Post!');
