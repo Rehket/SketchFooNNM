@@ -41,45 +41,34 @@
 
     // Add Event Listeners
     let subButton = document.getElementById('subButton');
-    subButton.addEventListener('click', submitImage, false);
+        subButton.addEventListener('change', submitImage, false);
     let imageLoader = document.getElementById('imageLoader');
     imageLoader.addEventListener('change', handleImage, false);
 
     myCanvas.addEventListener('click', resizeCanvas, false);
 
 
-
-
-
     // Init the Canvas
     redraw();
 
-    //Not Working
-    function submitImage() {
-        console.log('Submit image called...');
-
-        let meh = myCanvas.toDataURL('image/jpeg', 1.0);
-        document.getElementById('image').value = meh;
-
-        //console.log($('#uploadForm').serialize());
-
-      $.ajax({
-            type: "POST",
-            url: 'http://rehket.asuscomm.com:3000/sandbox/image',
-            data: {image: meh},
-            dataType: 'multipart/form-data'
-        });
+    function reqListener () {
+        console.log(this.responseText);
     }
 
-    // Prep the image by saving it to the form.
-    function prepImage() {
-        console.log('Prep Image Called...');
-        let subImage = new Image();
-        subImage.src = myCanvas.toDataURL('image/jpeg', 1.0);
-        subImage.onload = function(){
-            document.getElementById('image').value = subImage;
-        };
+    // Get the image ready to send and then send it.
+    function submitImage() {
+        let form = new FormData();
+        let myData = myContext.toDataURL('image/png');
 
+        form.append('image', myData);
+
+        let myRequest = new XMLHttpRequest();
+
+        myRequest.open();
+        //When the request is loaded, print it to console.
+        myRequest.addEventListener("load", reqListener);
+
+        myRequest.setRequestHeader()
     }
 
     function redraw() {
