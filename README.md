@@ -23,7 +23,7 @@ The Image Processing Queue maintains the queue of images that are to be processe
 > void : removeImage(int _imageIndex)<br>
 > childProcess : processImage(image _imageToBeProcessed<br>
 
-### More Be Added
+### More To Be Added
 
 ----------
  The main project page is available [Here](https://github.com/Rehket/SketchFoo).
