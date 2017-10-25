@@ -29,7 +29,12 @@
 <canvas id="InputCanvas" width="256" height="256"></canvas>
 <canvas id="OutputCanvas" width="256" height="256"></canvas>
 <input id="myFile" name="myFile" type="file" onchange=loadImageToCanvas(event)>
-<input id="mySubmitButton" type="button" value="Submit" onclick = packageAndSend('http://rehket.asuscomm.com:8000','Feret')>
+<input id="mySubmitButton" type="button" value="Submit" onclick = packageAndSend('http://rehket.asuscomm.com:8000')>
+<select id = "model_selection" name="cars">
+    <option value="Feret_2_Exported_model">Feret Training Set 2</option>
+    <option value="cuhk_faces">Chinese University of Hong Kong</option>
+    <option value="Feret">Feret Training Set 1</option>
+</select>
 </body>
 
 <script>
@@ -137,9 +142,11 @@
     }
 
     // Helper function to package and send the request.
-    function packageAndSend(targetURL, model){
+    function packageAndSend(targetURL){
+        let target_model = document.getElementById('model_selection').value;
+        console.log(target_model)
         let packagedImage = packageImage(document.getElementById('InputCanvas'));
-        createRequest(targetURL, model, packagedImage);
+        createRequest(targetURL, target_model, packagedImage);
 
     }
 
