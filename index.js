@@ -12,8 +12,14 @@ app.use('/sandbox', sandBox);
 
 app.use('/static', express.static(path.join(__dirname, 'public')));
 
-app.get('/testpage', function (req, res) {
+app.get('/', function (req, res) {
+
     res.sendFile('views/ImageSubmission.html', {root: __dirname });
+});
+
+app.get('/testing', function (req, res) {
+
+    res.sendFile('views/ImageSubmission-testing.html', {root: __dirname });
 });
 
 app.listen(3000, function () {

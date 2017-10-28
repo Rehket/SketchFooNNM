@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+
+<head>
+    <meta charset="utf-8">
+    <title>Submit Images To the NN</title>
+    <link rel="stylesheet" type="text/css" href="static/styles/main.css">
+    <script src="http://rehket.asuscomm.com:3000/static/js/base64ArrayBuffer.js"></script>
+    <script src="https://code.createjs.com/easeljs-0.8.2.min.js"></script>
+
+</head>
+<body id="body" onload="init();">
+
+<h1>Draw a face in the left window. See the results in the right.</h1>
+
+<div class="container-div">
+    <canvas id="InputCanvas"></canvas>
+    <input id="mySubmitButton" type="button" value="Submit" onclick = "PackAndSend(256, 256)">
+    <input id="myFile" name="myFile" type="file" onchange=loadImageToCanvas(event)>
+    <select id = "model_selection" name="models">
+        <option value="cuhk_faces">Chinese University of Hong Kong</option>
+        <option value="Feret">Feret Training Set 1</option>
+        <option value="Feret_2_model">Feret Training Set 2</option>
+        <option value="Feret_2_Reverse_model">Feret Faces to Sketches</option>
+    </select>
+</div>
+
+<div class="container-div">
+    <canvas id="OutputCanvas" width="512" height="512"></canvas>
+</div>
+
+</body>
+
+<script>
+    'use strict';
+
+    let inputCanvas, stage;
+    let drawingCanvas;
+    let oldPt;
+    let oldMidPt;
+    let title;
+    let color;
+    let stroke;
+    let colors;
+    let index;
+    let targetURL = 'http://rehket.asuscomm.com:8000';
+
+    // Get the canvas and stuff ready.
+    function init() {
+        inputCanvas = document.getElementById('InputCanvas');
+        inputCanvas.width = 512;
+        inputCanvas.height = 512;
+        index = 0;
+        colors = ['#828b20', '#b0ac31', '#b03928', '#00f47b', '#3e43dc', '#ff911e'];
+
+        //check to see if we are running in a browser with touch support
+
+        stage = new createjs.Stage(inputCanvas);
+        stage.autoClear = false;
+        stage.enableDOMEvents(true);
+
+        createjs.Touch.enable(stage);
+        createjs.Ticker.framerate = 24;
+        drawingCanvas = new createjs.Shape();
+        stage.addEventListener('stagemousedown', handleMouseDown);
+        stage.addEventListener('stagemouseup', handleMouseUp);
+        /*title = new createjs.Text('Click and Drag to draw', '36px Arial', '#777777');
+        title.x = canvas.width / 2;
+        title.y = canvas.height / 2;
+        stage.addChild(title); */
+        stage.addChild(drawingCanvas);
+        stage.update();
+    }
+
+    function handleMouseDown(event) {
+        if (!event.primary) { return; }
+        if (stage.contains(title)) {
+            stage.clear();
+            stage.removeChild(title);
+        }
+        color = '#000000';
+        stroke = 5;
+        oldPt = new createjs.Point(stage.mouseX, stage.mouseY);
+        oldMidPt = oldPt.clone();
+        stage.addEventListener("stagemousemove", handleMouseMove);
+    }
+    function handleMouseMove(event) {
+        if (!event.primary) { return; }
+        let midPt = new createjs.Point(oldPt.x + stage.mouseX >> 1, oldPt.y + stage.mouseY >> 1);
+        drawingCanvas.graphics.clear().setStrokeStyle(stroke, 'round', 'round')
+            .beginStroke(color).moveTo(midPt.x, midPt.y)
+            .curveTo(oldPt.x, oldPt.y, oldMidPt.x, oldMidPt.y);
+
+        oldPt.x = stage.mouseX;
+        oldPt.y = stage.mouseY;
+
+        oldMidPt.x = midPt.x;
+        oldMidPt.y = midPt.y;
+
+        stage.update();
+    }
+
+    function handleMouseUp(event) {
+        if (!event.primary) { return; }
+        stage.removeEventListener("stagemousemove", handleMouseMove);
+    }
+
+
+    // Set Draw Size
+    function setDrawSize() {
+        console.log('Set the line width to: ' + lineWidth);
+        lineWidth = getElement('size_selector').value;
+    }
+
+    // Undo
+    function undo () {
+    }
+
+    // Clear the canvas
+    function clearCanvas() {
+        console.log('Clear Called...');
+        inputContext.fillStyle = "white";
+        inputContext.fillRect(0,0, inputCanvas.width, inputCanvas.height);
+        clickX.length = 0;
+        clickY.length = 0;
+        clickDrag.length = 0;
+        redraw();
+    }
+
+    // Used to add elements to the drawing stack.
+    function addClick(x, y, dragging)
+    {
+        clickX.push(x);
+        clickY.push(y);
+        clickDrag.push(dragging);
+    }
+
+    // Helper function to get elements
+    function getElement(elementID) {
+        return document.getElementById(elementID);
+    }
+
+    function convertBase64ToBinary(str) {
+        // Atob decodes a base 64 encoded string.
+        let binaryString = atob(str);
+
+        let bin = new Uint8Array(binaryString.length);
+
+        for(let i = 0; i < bin.length; i++) {
+            bin[i] = binaryString.charCodeAt(i)
+        }
+        return bin;
+    }
+
+    // When the file input element calls the changed event, this function creates a new file reader,
+    // and loads the image to the canvas.
+    function loadImageToCanvas(event) {
+        let reader = new FileReader();
+        //let myCanvas = document.getElementById('InputCanvas');
+        // console.log('Event Fired');
+        // console.log(e);
+        reader.onload = function(event) { // Step 2, the File Reader loads
+            console.log('Reader Loaded');
+            let img = new Image();
+            img.onload = function () {   // Step 4, the reader loads.
+                console.log('Image Loaded');
+                let bitmap = new createjs.Bitmap(img);
+                // TODO: Make this scale based on size of input image and target canvas size.
+                bitmap.scaleX = 2;
+                bitmap.scaleY = 2;
+
+                stage.addChild(bitmap);
+                stage.update();
+                //myContext.drawImage(img, 0, 0, img.width, img.height, 0, 0, myCanvas.width, myCanvas.height);
+                //packageImage(myCanvas);
+            };
+            // console.log(e.target.result);
+            img.src = event.target.result;  // Step 3
+        };
+
+        reader.readAsDataURL(event.target.files[0]); // Step 1, reader reads the file(s) we selected.
+
+    }
+
+    //Downscale the image to send to the server.
+    function PackAndSend( targetWidth, targetHeight) {
+        console.log(targetWidth);
+        console.log(targetHeight);
+        let resizedCanvas = document.createElement('canvas');
+        resizedCanvas.width = targetWidth;
+        resizedCanvas.height = targetHeight;
+        console.log(resizedCanvas);
+        let oldWidth = inputCanvas.width;
+        let oldHeight = inputCanvas.height;
+
+        let resizedImageCtx = resizedCanvas.getContext('2d');
+
+        let img = new Image();
+
+        img.onload = function () {
+            console.log(img);
+            resizedImageCtx.drawImage(img , 0, 0, oldWidth, oldHeight, 0, 0, targetWidth, targetHeight);
+            // document.getElementById('body').append(resizedCanvas);
+            let target_model = document.getElementById('model_selection').value;
+            createRequest(targetURL, target_model, packageImage(resizedCanvas));
+
+        };
+
+        img.src = stage.toDataURL('#ffffff', 'image/png');
+    }
+
+    // Create a new XMLHTTPRequest
+    function createRequest(targetURL, model, data) {
+        let reqInProgress = true;
+
+        console.log('Request being created: ' + targetURL + '/' + model);
+        let request = new XMLHttpRequest();
+        //We are creating a post request that will be sent to the target model url.
+        request.open('POST', targetURL + '/' + model, true);
+
+        request.setRequestHeader('Content-Type', 'image/png');
+
+        request.responseType = 'arraybuffer';
+
+        request.timeout = 45000;
+
+        request.onreadystatechange = function () {
+            if (this.readyState === 4 && this.status === 200) {
+                console.log('Request is complete!');
+                let output = new Uint8Array(this.response);
+                let output_b64 = base64ArrayBuffer(output);
+                let img = new Image();
+
+                img.onload = function() {
+                    // console.log('Image Loaded');
+                    let resultCanvas = document.getElementById('OutputCanvas');
+                    let resultContext = resultCanvas.getContext('2d');
+                    resultContext.drawImage(img, 0, 0, img.width, img.height, 0, 0, resultCanvas.width, resultCanvas.height);
+                };
+                img.onerror = function() {
+                    console.log('An Error occurred.');
+                };
+                // console.log("data:image\/png;base64," + output_b64);
+                img.src = "data:image\/png;base64," + output_b64;
+
+            }
+        };
+
+        console.log('Output data is: ' + data);
+
+        request.send(data);
+    }
+
+    // Helper function to package and send the request.
+    function packageAndSend(targetURL){
+        let target_model = document.getElementById('model_selection').value;
+        console.log(target_model);
+        let resizedCanvas = resizeImage(256, 256);
+        let packagedImage = packageImage(resizedCanvas);
+        createRequest(targetURL, target_model, packagedImage);
+
+    }
+
+    // This function will take a canvas element, and package the image so it can be processed by the neural network.
+    // For easel.js, if the image is going to be resized, access the canvas in the stage.
+    function packageImage(img) {
+        let input = img.toDataURL("img/png");
+        //console.log('Data Url:\n' + input)
+        let base64_input = input.replace(/^data:image\/png;base64,/, "");
+        //console.log('Stripped input: ' + input);
+
+        let bin_string = convertBase64ToBinary(base64_input);
+        //console.log('Binary String : ' + bin_string);
+
+        return bin_string;
+    }
+
+</script>

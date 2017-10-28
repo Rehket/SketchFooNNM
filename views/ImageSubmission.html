@@ -3,42 +3,123 @@
 <head>
     <meta charset="utf-8">
     <title>Submit Images To the NN</title>
-    <style>
-        html, body {
-            width: 100%;
-            height: 100%;
-            margin: 0;
-            border: 0;
-            overflow: hidden; /*  Disable scrollbars */
-            display: block;  /* No floating content on sides */
-            background-color: #666666;
-
-        }
-        canvas {
-            border: 1px solid #000000;
-        }
-    </style>
-    <script src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="static/styles/main.css">
     <script src="http://rehket.asuscomm.com:3000/static/js/base64ArrayBuffer.js"></script>
-    <script src="https://code.createjs.com/easeljs-0.8.2.min.js"></script>
 
 </head>
+<body>
+<h1>Draw a face in the left window. See the results in the right.</h1>
+<div class="container-div">
+    <select id = "color_selection" name="color_selection">
+        <option value="#000000">Black</option>
+        <option value="#ffffff">White</option>
+    </select>
+    <select id = "size_selector" name="size_selector" onchange="setDrawSize()">
+        <option value="1">Tiny</option>
+        <option value="2">Small</option>
+        <option value="5">Medium</option>
+        <option value="8">Large</option>
+    </select>
+</div>
+<div class="container-div">
+    <canvas id="InputCanvas" width="512" height="512"></canvas>
+    <canvas id="OutputCanvas" width="512" height="512"></canvas>
+</div>
+<div class="container-div">
+    <input id="undoBtn" name="myUndoBtn" type="button" value="Undo" onclick="undo()">
+    <input id="clearBtn" name="myClearBtn" type="button" value="Clear" onclick="clearCanvas()">
+    <input id="myFile" name="myFile" type="file" onchange=loadImageToCanvas(event)>
+    <input id="mySubmitButton" type="button" value="Submit" onclick = packageAndSend('http://rehket.asuscomm.com:8000')>
+    <select id = "model_selection" name="models">
+        <option value="cuhk_faces">Chinese University of Hong Kong</option>
+        <option value="Feret">Feret Training Set 1</option>
+        <option value="Feret_2_model">Feret Training Set 2</option>
+        <option value="Feret_2_Reverse_model">Feret Faces to Sketches</option>
+    </select>
 
-<body onload="init();">
+    <!-- Rounded switch -->
+    <label class="switch">
+        Continuous Update
+        <input id="contUpdate" type="checkbox">
+        <span class="slider round"></span>
+    </label>
+</div>
 
-<canvas id="InputCanvas" width="256" height="256"></canvas>
-<canvas id="OutputCanvas" width="256" height="256"></canvas>
-<input id="myFile" name="myFile" type="file" onchange=loadImageToCanvas(event)>
-<input id="mySubmitButton" type="button" value="Submit" onclick = packageAndSend('http://rehket.asuscomm.com:8000')>
-<select id = "model_selection" name="cars">
-    <option value="Feret_2_Exported_model">Feret Training Set 2</option>
-    <option value="cuhk_faces">Chinese University of Hong Kong</option>
-    <option value="Feret">Feret Training Set 1</option>
-</select>
 </body>
 
 <script>
     'use strict';
+
+    let clickX = new Array();
+    let clickY = new Array();
+    let clickDrag = new Array();
+    let paint = false;
+    let lineWidth = 5;
+    const inputCanvas = getElement('InputCanvas');
+    const inputContext = inputCanvas.getContext('2d');
+
+    let timer = setInterval(function() {intervalProcess()}, 1000);
+
+    initCanvas();
+
+
+
+    // Function Definitions
+
+    function intervalProcess () {
+        let val = getElement('contUpdate').checked;
+        if (val) {
+            console.log(val);
+            console.log('Sending');
+            packageAndSend('http://rehket.asuscomm.com:8000')
+        }
+
+    }
+
+    // Set Draw Size
+    function setDrawSize() {
+        console.log('Set the line width to: ' + lineWidth);
+        lineWidth = getElement('size_selector').value;
+    }
+
+    // Undo
+    function undo () {
+        if (clickX.length === 0) {
+            return;
+        }
+        for(let i = 0; i < 5; i++){
+            clickX.pop();
+            clickY.pop();
+            clickDrag.pop();
+        }
+
+        redraw();
+    }
+
+    // Clear the canvas
+    function clearCanvas() {
+        console.log('Clear Called...');
+        inputContext.fillStyle = "white";
+        inputContext.fillRect(0,0, inputCanvas.width, inputCanvas.height);
+        clickX.length = 0;
+        clickY.length = 0;
+        clickDrag.length = 0;
+        redraw();
+    }
+
+    // Used to add elements to the drawing stack.
+    function addClick(x, y, dragging)
+    {
+        clickX.push(x);
+        clickY.push(y);
+        clickDrag.push(dragging);
+    }
+
+    // Helper function to get elements
+    function getElement(elementID) {
+        return document.getElementById(elementID);
+    }
+
     function convertBase64ToBinary(str) {
         // Atob decodes a base 64 encoded string.
         let binaryString = atob(str);
@@ -65,13 +146,13 @@
 
     // When the file input element calls the changed event, this function creates a new file reader,
     // and loads the image to the canvas.
-    function loadImageToCanvas(e) {
+    function loadImageToCanvas(event) {
         let reader = new FileReader();
         let myCanvas = document.getElementById('InputCanvas');
         let myContext = myCanvas.getContext('2d');
-        console.log('Event Fired');
-        console.log(e);
-        reader.onload = function(e) { // Step 2, the File Reader loads
+        // console.log('Event Fired');
+        // console.log(e);
+        reader.onload = function(event) { // Step 2, the File Reader loads
             console.log('Reader Loaded');
             let img = new Image();
             img.onload = function () {   // Step 4, the reader loads.
@@ -80,15 +161,30 @@
                 packageImage(myCanvas);
             };
             // console.log(e.target.result);
-            img.src = e.target.result;  // Step 3
+            img.src = event.target.result;  // Step 3
         };
 
-        reader.readAsDataURL(e.target.files[0]); // Step 1, reader reads the file(s) we selected.
+        reader.readAsDataURL(event.target.files[0]); // Step 1, reader reads the file(s) we selected.
+
+    }
+
+    //Downscale the image to send to the server.
+    function resizeImage( targetWidth, targetHeight) {
+        let resizedImage = document.createElement('canvas');
+        let oldWidth = inputCanvas.width;
+        let oldHeight = inputCanvas.height;
+        resizedImage.width = targetWidth;
+        resizedImage.height = targetHeight;
+        let resizedImageCtx = resizedImage.getContext('2d');
+        resizedImageCtx.drawImage(inputCanvas, 0, 0, oldWidth, oldHeight, 0, 0, targetWidth, targetHeight);
+
+        return resizedImage;
 
     }
 
     // This function will take a canvas element, and package the image so it can be processed by the neural network.
     function packageImage(img) {
+        resizeImage()
         let input = img.toDataURL("img/png");
         //console.log('Data Url:\n' + input)
         let base64_input = input.replace(/^data:image\/png;base64,/, "");
@@ -126,12 +222,12 @@
                     // console.log('Image Loaded');
                     let resultCanvas = document.getElementById('OutputCanvas');
                     let resultContext = resultCanvas.getContext('2d');
-                    resultContext.drawImage(img, 0, 0);
+                    resultContext.drawImage(img, 0, 0, img.width, img.height, 0, 0, resultCanvas.width, resultCanvas.height);
                 };
                 img.onerror = function() {
                     console.log('An Error occurred.');
                 };
-                console.log("data:image\/png;base64," + output_b64);
+                // console.log("data:image\/png;base64," + output_b64);
                 img.src = "data:image\/png;base64," + output_b64;
 
             }
@@ -144,43 +240,81 @@
     // Helper function to package and send the request.
     function packageAndSend(targetURL){
         let target_model = document.getElementById('model_selection').value;
-        console.log(target_model)
-        let packagedImage = packageImage(document.getElementById('InputCanvas'));
+        console.log(target_model);
+        let resizedCanvas = resizeImage(256, 256);
+        let packagedImage = packageImage(resizedCanvas);
         createRequest(targetURL, target_model, packagedImage);
 
     }
 
-    // Init the Canvas
-    function init() {
-        let stage = new createjs.Stage('demoCanvas');
-        let circle = new createjs.Shape();
-        circle.graphics.beginFill('DeepSkyBlue').drawCircle(0, 0, 50);
-        circle.x = 100;
-        circle.y = 100;
-        stage.addChild(circle);
-        stage.update();
-    }
 
     function reqListener () {
         console.log(this.responseText);
     }
 
-    // Get the image ready to send and then send it.
-    function submitImage() {
-        let form = new FormData();
-        let myData = myContext.toDataURL('image/png');
+    // Initialize the canvas and add all the required event listeners.
+    function initCanvas() {
+        console.log('Canvas Initializing...');
 
-        form.append('image', myData);
+        setDrawSize();
 
-        let myRequest = new XMLHttpRequest();
+        // Mouse Move
+        inputCanvas.addEventListener('mousedown', function (event) {
+            console.log('Mouse down...');
+            let mouseX = event.pageX - this.offsetLeft;
+            let mouseY = event.pageY - this.offsetTop;
 
-        myRequest.open();
-        //When the request is loaded, print it to console.
-        myRequest.addEventListener("load", reqListener);
+            paint = true;
+            addClick(event.pageX - this.offsetLeft, event.pageY - this.offsetTop);
+            redraw();
+        });
 
-        myRequest.setRequestHeader()
+        // Mouse up
+        inputCanvas.addEventListener('mouseup', function (event) {
+            paint = false;
+        });
+
+        // Mouse Move
+        inputCanvas.addEventListener('mousemove', function (event) {
+            console.log('Mouse move...');
+            if (paint) {
+                addClick(event.pageX - this.offsetLeft, event.pageY - this.offsetTop, true)
+                redraw();
+            }
+
+        });
+        // Mouse Leave
+        inputCanvas.addEventListener('mouseleave', function (event) {
+            console.log('Mouse left...');
+            paint = false;
+        });
+
+        redraw();
+
+        console.log('Canvas Initializing Complete');
     }
+    function redraw () {
+        console.log("Redraw fired...");
+        inputContext.fillStyle = "white";
+        inputContext.fillRect(0,0, inputCanvas.width, inputCanvas.height);
 
+        inputContext.strokeStyle = '#000000';
+        inputContext.lineJoin = 'round';
+        inputContext.lineWidth = lineWidth;
+
+        for(let i = 0; i < clickX.length; i++) {
+            inputContext.beginPath();
+            if(clickDrag[i] && i){
+                inputContext.moveTo(clickX[i-1], clickY[i-1]);
+            }else{
+                inputContext.moveTo(clickX[i]-1, clickY[i]);
+            }
+            inputContext.lineTo(clickX[i], clickY[i]);
+            inputContext.closePath();
+            inputContext.stroke();
+        }
+
+    }
 
 
 
