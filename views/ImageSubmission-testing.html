@@ -3,17 +3,19 @@
 <head>
     <meta charset="utf-8">
     <title>Submit Images To the NN</title>
-    <link rel="stylesheet" type="text/css" href="static/styles/main.css">
+    <link rel="stylesheet" type="text/css" href="http://rehket.asuscomm.com:3000/static/styles/main.css">
     <script src="http://rehket.asuscomm.com:3000/static/js/base64ArrayBuffer.js"></script>
-    <script src="https://code.createjs.com/easeljs-0.8.2.min.js"></script>
+    <script type="text/JavaScript" src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+    <script type="text/JavaScript" src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+    <script type="text/JavaScript" src="https://code.createjs.com/easeljs-0.8.2.min.js"></script>
 
 </head>
 <body id="body" onload="init();">
 
 <h1>Draw a face in the left window. See the results in the right.</h1>
 
+
 <div class="container-div">
-    <canvas id="InputCanvas"></canvas>
     <input id="mySubmitButton" type="button" value="Submit" onclick = "PackAndSend(256, 256)">
     <input id="myFile" name="myFile" type="file" onchange=loadImageToCanvas(event)>
     <select id = "model_selection" name="models">
@@ -25,15 +27,24 @@
 </div>
 
 <div class="container-div">
-    <canvas id="OutputCanvas" width="512" height="512"></canvas>
+    <div class="input-div">
+        <canvas id="TemplateCanvas" width="512" height="512"
+                style="z-index: 0;"></canvas>
+        <canvas id="InputCanvas" width="512" height="512"
+                style="z-index: 1;"></canvas>
+    </div>
+    <div class="output-div">
+        <canvas id="OutputCanvas" width="512" height="512"></canvas>
+    </div>
 </div>
+
 
 </body>
 
 <script>
     'use strict';
 
-    let inputCanvas, stage;
+    let inputCanvas, templateCanvas, stage;
     let drawingCanvas;
     let oldPt;
     let oldMidPt;
@@ -47,6 +58,7 @@
     // Get the canvas and stuff ready.
     function init() {
         inputCanvas = document.getElementById('InputCanvas');
+        templateCanvas = getElement('TemplateCanvas');
         inputCanvas.width = 512;
         inputCanvas.height = 512;
         index = 0;
@@ -61,35 +73,33 @@
         createjs.Touch.enable(stage);
         createjs.Ticker.framerate = 24;
         drawingCanvas = new createjs.Shape();
+        drawingCanvas.name = 'Drawing_Canvas';
         stage.addEventListener('stagemousedown', handleMouseDown);
         stage.addEventListener('stagemouseup', handleMouseUp);
-        /*title = new createjs.Text('Click and Drag to draw', '36px Arial', '#777777');
-        title.x = canvas.width / 2;
-        title.y = canvas.height / 2;
-        stage.addChild(title); */
+
         stage.addChild(drawingCanvas);
         stage.update();
     }
 
     function handleMouseDown(event) {
-        if (!event.primary) { return; }
-        if (stage.contains(title)) {
-            stage.clear();
-            stage.removeChild(title);
-        }
+        //if (!event.primary) { return; }
+
         color = '#000000';
-        stroke = 5;
+        stroke = 2;
+        // This marks where the mouse down event happens.
         oldPt = new createjs.Point(stage.mouseX, stage.mouseY);
         oldMidPt = oldPt.clone();
         stage.addEventListener("stagemousemove", handleMouseMove);
     }
     function handleMouseMove(event) {
+        console.log('Move Fired...' + stage.mouseX + ' ' + stage.mouseY);
         if (!event.primary) { return; }
         let midPt = new createjs.Point(oldPt.x + stage.mouseX >> 1, oldPt.y + stage.mouseY >> 1);
         drawingCanvas.graphics.clear().setStrokeStyle(stroke, 'round', 'round')
             .beginStroke(color).moveTo(midPt.x, midPt.y)
             .curveTo(oldPt.x, oldPt.y, oldMidPt.x, oldMidPt.y);
 
+        stage.setChildIndex(drawingCanvas, 0);
         oldPt.x = stage.mouseX;
         oldPt.y = stage.mouseY;
 
@@ -117,21 +127,6 @@
 
     // Clear the canvas
     function clearCanvas() {
-        console.log('Clear Called...');
-        inputContext.fillStyle = "white";
-        inputContext.fillRect(0,0, inputCanvas.width, inputCanvas.height);
-        clickX.length = 0;
-        clickY.length = 0;
-        clickDrag.length = 0;
-        redraw();
-    }
-
-    // Used to add elements to the drawing stack.
-    function addClick(x, y, dragging)
-    {
-        clickX.push(x);
-        clickY.push(y);
-        clickDrag.push(dragging);
     }
 
     // Helper function to get elements
@@ -155,25 +150,16 @@
     // and loads the image to the canvas.
     function loadImageToCanvas(event) {
         let reader = new FileReader();
-        //let myCanvas = document.getElementById('InputCanvas');
-        // console.log('Event Fired');
-        // console.log(e);
+
         reader.onload = function(event) { // Step 2, the File Reader loads
             console.log('Reader Loaded');
             let img = new Image();
             img.onload = function () {   // Step 4, the reader loads.
                 console.log('Image Loaded');
-                let bitmap = new createjs.Bitmap(img);
-                // TODO: Make this scale based on size of input image and target canvas size.
-                bitmap.scaleX = 2;
-                bitmap.scaleY = 2;
-
-                stage.addChild(bitmap);
-                stage.update();
-                //myContext.drawImage(img, 0, 0, img.width, img.height, 0, 0, myCanvas.width, myCanvas.height);
-                //packageImage(myCanvas);
+                let templateContext = templateCanvas.getContext('2d');
+                templateContext.drawImage(img, 0, 0, img.width, img.height, 0, 0, templateCanvas.width, templateCanvas.height);
             };
-            // console.log(e.target.result);
+
             img.src = event.target.result;  // Step 3
         };
 
@@ -273,5 +259,6 @@
 
         return bin_string;
     }
+
 
 </script>

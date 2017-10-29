@@ -9,6 +9,12 @@
     width: 60px;
     height: 34px;
 }
+.input-div {
+    position: relative;
+}
+.output-div {
+    position: relative;
+}
 
 html, body {
     width: 100%;
@@ -22,6 +28,18 @@ html, body {
 canvas {
     border: 1px solid #000000;
 
+}
+
+#TemplateCanvas, #InputCanvas{
+    position: absolute;
+    left: 0;
+    top: 0;
+}
+
+#OutputCanvas {
+    position: absolute;
+    right: 0;
+    top: 0;
 }
 
 .container-div {
