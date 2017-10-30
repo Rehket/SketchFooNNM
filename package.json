@@ -18,10 +18,12 @@
   "homepage": "https://github.com/Rehket/SketchFooNNM#readme",
   "dependencies": {
     "connect-redis": "^3.3.0",
+    "cors": "^2.8.4",
     "express": "^4.15.2",
     "moment": "^2.18.1",
     "multer": "^1.3.0",
     "passport": "^0.4.0",
-    "promise": "^8.0.1"
+    "promise": "^8.0.1",
+    "request": "^2.83.0"
   }
 }

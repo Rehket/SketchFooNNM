@@ -5,6 +5,7 @@
     <title>Submit Images To the NN</title>
     <link rel="stylesheet" type="text/css" href="http://rehket.asuscomm.com:3000/static/styles/main.css">
     <script src="http://rehket.asuscomm.com:3000/static/js/base64ArrayBuffer.js"></script>
+    <script src="http://rehket.asuscomm.com:3000/static/js/getModels.js"></script>
     <script type="text/JavaScript" src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
     <script type="text/JavaScript" src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
     <script type="text/JavaScript" src="https://code.createjs.com/easeljs-0.8.2.min.js"></script>
@@ -19,10 +20,7 @@
     <input id="mySubmitButton" type="button" value="Submit" onclick = "PackAndSend(256, 256)">
     <input id="myFile" name="myFile" type="file" onchange=loadImageToCanvas(event)>
     <select id = "model_selection" name="models">
-        <option value="cuhk_faces">Chinese University of Hong Kong</option>
-        <option value="Feret">Feret Training Set 1</option>
-        <option value="Feret_2_model">Feret Training Set 2</option>
-        <option value="Feret_2_Reverse_model">Feret Faces to Sketches</option>
+
     </select>
     <select id = "size_selector" name="size_selector" onchange="setDrawSize()">
         <option value="1">Tiny</option>
@@ -56,10 +54,13 @@
     let oldMidPt;
     let title;
     let color;
-    let stroke = 2;
+    let stroke = 1;
     let colors;
     let index;
     let targetURL = 'http://rehket.asuscomm.com:8000';
+
+    httpGetModels('http://rehket.asuscomm.com:3000' + '/status/models');
+
 
     // Get the canvas and stuff ready.
     function init() {
