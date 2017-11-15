@@ -20,7 +20,7 @@
     <input id="mySubmitButton" type="button" value="Submit" onclick = "PackAndSend(256, 256)">
     <input id="myFile" name="myFile" type="file" onchange=loadImageToCanvas(event)>
     <select id = "model_selection" name="models">
-
+        <!--Filled Dynamically with the function from getModels.js-->
     </select>
     <select id = "size_selector" name="size_selector" onchange="setDrawSize()">
         <option value="1">Tiny</option>
@@ -28,20 +28,29 @@
         <option value="5">Medium</option>
         <option value="8">Large</option>
     </select>
-</div>
+    <select id = "color_selector" name="color_selector" onchange="setColorIndex()">
 
-<div class="container-div">
-    <div class="input-div">
-        <canvas id="TemplateCanvas" width="512" height="512"
-                style="z-index: 0;"></canvas>
-        <canvas id="InputCanvas" width="512" height="512"
-                style="z-index: 1;"></canvas>
-    </div>
-    <div class="output-div">
-        <canvas id="OutputCanvas" width="512" height="512"></canvas>
-    </div>
+        <option value="1">Black</option>
+        <option value="0">White/Eraser</option>
+    </select>
 </div>
+<div class="canvas-container">
+    <div class="container-div">
+        <div class="input-div">
+            <canvas id="TemplateCanvas" width="512" height="512"
+                    style="z-index: 0;"></canvas>
+            <canvas id="InputCanvas" width="512" height="512"
+                    style="z-index: 1;"></canvas>
+        </div>
 
+    </div>
+    <div class="container-div">
+        <div class="output-div">
+            <canvas id="OutputCanvas" width="512" height="512"></canvas>
+        </div>
+    </div>
+
+</div>
 
 </body>
 
@@ -53,12 +62,14 @@
     let oldPt;
     let oldMidPt;
     let title;
-    let color;
+    let color = ['#ffffff', '#000'];
+    let colorIndex = 1;
     let stroke = 1;
     let colors;
     let index;
     let targetURL = 'http://rehket.asuscomm.com:8000';
 
+    // Get the models available.
     httpGetModels('http://rehket.asuscomm.com:3000' + '/status/models');
 
 
@@ -66,6 +77,12 @@
     function init() {
         inputCanvas = document.getElementById('InputCanvas');
         templateCanvas = getElement('TemplateCanvas');
+        let templateContext = templateCanvas.getContext('2d');
+
+        templateContext.fillStyle='#fff';
+
+        templateContext.fillRect(0, 0, templateCanvas.width, templateCanvas.height);
+
         inputCanvas.width = 512;
         inputCanvas.height = 512;
         index = 0;
@@ -86,23 +103,29 @@
 
         stage.addChild(drawingCanvas);
         stage.update();
+
+        // Init Page Defaults
+        setDrawSize();
+        setColorIndex();
     }
 
     function handleMouseDown(event) {
         //if (!event.primary) { return; }
 
-        color = '#000000';
+
         // This marks where the mouse down event happens.
         oldPt = new createjs.Point(stage.mouseX, stage.mouseY);
         oldMidPt = oldPt.clone();
         stage.addEventListener("stagemousemove", handleMouseMove);
     }
+
+
     function handleMouseMove(event) {
-        console.log('Move Fired...' + stage.mouseX + ' ' + stage.mouseY);
+        //console.log('Move Fired...' + stage.mouseX + ' ' + stage.mouseY);
         if (!event.primary) { return; }
         let midPt = new createjs.Point(oldPt.x + stage.mouseX >> 1, oldPt.y + stage.mouseY >> 1);
         drawingCanvas.graphics.clear().setStrokeStyle(stroke, 'round', 'round')
-            .beginStroke(color).moveTo(midPt.x, midPt.y)
+            .beginStroke(color[ colorIndex ]).moveTo(midPt.x, midPt.y)
             .curveTo(oldPt.x, oldPt.y, oldMidPt.x, oldMidPt.y);
 
         stage.setChildIndex(drawingCanvas, 0);
@@ -125,6 +148,11 @@
     function setDrawSize() {
         stroke = getElement('size_selector').value;
         console.log('Set the line width to: ' + stroke);
+    }
+
+    function setColorIndex() {
+        colorIndex = getElement('color_selector').value;
+        console.log('Set the line color to: ' + color[colorIndex]);
     }
 
     // Undo

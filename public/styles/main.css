@@ -1,5 +1,6 @@
 .container-div {
     margin: 1em;
+    height: auto;
 }
 
 /* The switch - the box around the slider */
@@ -44,4 +45,25 @@ canvas {
 
 .container-div {
     margin: 1em;
+}
+@media screen and (max-width: 1100px){
+    #OutputCanvas {
+        position: absolute;
+        left: 0;
+        top: 578px;
+    }
+
+    html, body {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        border: 0;
+        display: block;  /* No floating content on sides */
+        background-color: #009bea;
+
+    }
+
+    .canvas-container {
+        text-align: center;
+    }
 }
