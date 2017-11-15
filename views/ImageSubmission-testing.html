@@ -109,17 +109,16 @@
         setColorIndex();
     }
 
+    // Mouse down event
     function handleMouseDown(event) {
-        //if (!event.primary) { return; }
-
-
+        if (!event.primary) { return; }
         // This marks where the mouse down event happens.
         oldPt = new createjs.Point(stage.mouseX, stage.mouseY);
         oldMidPt = oldPt.clone();
         stage.addEventListener("stagemousemove", handleMouseMove);
     }
 
-
+    // handles mouse movement events.
     function handleMouseMove(event) {
         //console.log('Move Fired...' + stage.mouseX + ' ' + stage.mouseY);
         if (!event.primary) { return; }
@@ -138,6 +137,7 @@
         stage.update();
     }
 
+    // Mouse Up
     function handleMouseUp(event) {
         if (!event.primary) { return; }
         stage.removeEventListener("stagemousemove", handleMouseMove);
@@ -150,16 +150,17 @@
         console.log('Set the line width to: ' + stroke);
     }
 
+    // used for switching colors. Make it a json object.
     function setColorIndex() {
         colorIndex = getElement('color_selector').value;
         console.log('Set the line color to: ' + color[colorIndex]);
     }
 
-    // Undo
+    // TODO: Undo
     function undo () {
     }
 
-    // Clear the canvas
+    // TODO: Clear the canvas
     function clearCanvas() {
     }
 
@@ -181,7 +182,7 @@
     }
 
     // When the file input element calls the changed event, this function creates a new file reader,
-    // and loads the image to the canvas.
+    // and loads the image to the template canvas.
     function loadImageToCanvas(event) {
         let reader = new FileReader();
 
@@ -203,8 +204,9 @@
 
     //Downscale the image to send to the server.
     function PackAndSend( targetWidth, targetHeight) {
-        console.log(targetWidth);
-        console.log(targetHeight);
+        // console.log(targetWidth);
+        // console.log(targetHeight);
+        // Make a canvas element to render the resized image data to.
         let resizedCanvas = document.createElement('canvas');
         resizedCanvas.width = targetWidth;
         resizedCanvas.height = targetHeight;
@@ -216,6 +218,7 @@
 
         let img = new Image();
 
+        // Once the image is ready, pack it up to be sent for processing.
         img.onload = function () {
             console.log(img);
             resizedImageCtx.drawImage(img , 0, 0, oldWidth, oldHeight, 0, 0, targetWidth, targetHeight);
