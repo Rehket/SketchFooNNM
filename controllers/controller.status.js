@@ -7,8 +7,8 @@ const http = require('http');
 
 exports.getModels = function (req, res) {
     let options = {
-        host: 'rehket.asuscomm.com',
-        path: '/models',
+        host: 'localhost',
+        path: '/api/models/',
         port: 8000
     };
 

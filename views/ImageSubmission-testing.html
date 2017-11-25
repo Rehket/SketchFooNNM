@@ -67,7 +67,7 @@
     let stroke = 1;
     let colors;
     let index;
-    let targetURL = 'http://rehket.asuscomm.com:8000';
+    let targetURL = 'http://rehket.asuscomm.com:8000/';
 
     // Get the models available.
     httpGetModels('http://rehket.asuscomm.com:3000' + '/status/models');
@@ -210,7 +210,7 @@
         let resizedCanvas = document.createElement('canvas');
         resizedCanvas.width = targetWidth;
         resizedCanvas.height = targetHeight;
-        console.log(resizedCanvas);
+        // console.log(resizedCanvas);
         let oldWidth = inputCanvas.width;
         let oldHeight = inputCanvas.height;
 
@@ -220,7 +220,7 @@
 
         // Once the image is ready, pack it up to be sent for processing.
         img.onload = function () {
-            console.log(img);
+            // console.log(img);
             resizedImageCtx.drawImage(img , 0, 0, oldWidth, oldHeight, 0, 0, targetWidth, targetHeight);
             // document.getElementById('body').append(resizedCanvas);
             let target_model = document.getElementById('model_selection').value;
@@ -235,22 +235,25 @@
     function createRequest(targetURL, model, data) {
         let reqInProgress = true;
 
+
+
         console.log('Request being created: ' + targetURL + '/' + model);
         let request = new XMLHttpRequest();
         //We are creating a post request that will be sent to the target model url.
-        request.open('POST', targetURL + '/' + model, true);
+        // request.open('POST', targetURL + '/' + model, true);
+        request.open('POST', 'http://localhost:8000/api/image/' , true);
 
-        request.setRequestHeader('Content-Type', 'image/png');
+        request.setRequestHeader('Content-Type', 'application/json');
 
-        request.responseType = 'arraybuffer';
+        request.responseType = 'application/json';
 
         request.timeout = 45000;
 
         request.onreadystatechange = function () {
-            if (this.readyState === 4 && this.status === 200) {
-                console.log('Request is complete!');
-                let output = new Uint8Array(this.response);
-                let output_b64 = base64ArrayBuffer(output);
+            if (this.readyState === 4 && this.status === 201) {
+
+                let result = JSON.parse(String(this.response))[0];
+                console.log(result.image);
                 let img = new Image();
 
                 img.onload = function() {
@@ -262,15 +265,16 @@
                 img.onerror = function() {
                     console.log('An Error occurred.');
                 };
-                // console.log("data:image\/png;base64," + output_b64);
-                img.src = "data:image\/png;base64," + output_b64;
+
+                img.src = "data:image\/png;base64," + result.image;
 
             }
         };
 
-        console.log('Output data is: ' + data);
+        // console.log('Output data is: ' + data);
+        let pack = JSON.stringify([{image: data, model:document.getElementById('model_selection').value}]);
 
-        request.send(data);
+        request.send(pack);
     }
 
     // Helper function to package and send the request.
@@ -288,13 +292,13 @@
     function packageImage(img) {
         let input = img.toDataURL("img/png");
         //console.log('Data Url:\n' + input)
-        let base64_input = input.replace(/^data:image\/png;base64,/, "");
+        // let base64_input = input.replace(/^data:image\/png;base64,/, "");
         //console.log('Stripped input: ' + input);
 
-        let bin_string = convertBase64ToBinary(base64_input);
+        // let bin_string = convertBase64ToBinary(base64_input);
         //console.log('Binary String : ' + bin_string);
 
-        return bin_string;
+        return input;
     }
 
 
