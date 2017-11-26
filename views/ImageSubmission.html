@@ -3,16 +3,24 @@
 <head>
     <meta charset="utf-8">
     <title>Submit Images To the NN</title>
-    <link rel="stylesheet" type="text/css" href="static/styles/main.css">
+    <link rel="stylesheet" type="text/css" href="http://rehket.asuscomm.com:3000/static/styles/main.css">
     <script src="http://rehket.asuscomm.com:3000/static/js/base64ArrayBuffer.js"></script>
+    <script src="http://rehket.asuscomm.com:3000/static/js/getModels.js"></script>
+    <script type="text/JavaScript" src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+    <script type="text/JavaScript" src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+    <script type="text/JavaScript" src="https://code.createjs.com/easeljs-0.8.2.min.js"></script>
 
 </head>
-<body>
+<body id="body" onload="init();">
+
 <h1>Draw a face in the left window. See the results in the right.</h1>
+
+
 <div class="container-div">
-    <select id = "color_selection" name="color_selection">
-        <option value="#000000">Black</option>
-        <option value="#ffffff">White</option>
+    <input id="mySubmitButton" type="button" value="Submit" onclick = "PackAndSend(256, 256)">
+    <input id="myFile" name="myFile" type="file" onchange=loadImageToCanvas(event)>
+    <select id = "model_selection" name="models">
+        <!--Filled Dynamically with the function from getModels.js-->
     </select>
     <select id = "size_selector" name="size_selector" onchange="setDrawSize()">
         <option value="1">Tiny</option>
@@ -20,29 +28,28 @@
         <option value="5">Medium</option>
         <option value="8">Large</option>
     </select>
-</div>
-<div class="container-div">
-    <canvas id="InputCanvas" width="512" height="512"></canvas>
-    <canvas id="OutputCanvas" width="512" height="512"></canvas>
-</div>
-<div class="container-div">
-    <input id="undoBtn" name="myUndoBtn" type="button" value="Undo" onclick="undo()">
-    <input id="clearBtn" name="myClearBtn" type="button" value="Clear" onclick="clearCanvas()">
-    <input id="myFile" name="myFile" type="file" onchange=loadImageToCanvas(event)>
-    <input id="mySubmitButton" type="button" value="Submit" onclick = packageAndSend('http://rehket.asuscomm.com:8000')>
-    <select id = "model_selection" name="models">
-        <option value="cuhk_faces">Chinese University of Hong Kong</option>
-        <option value="Feret">Feret Training Set 1</option>
-        <option value="Feret_2_model">Feret Training Set 2</option>
-        <option value="Feret_2_Reverse_model">Feret Faces to Sketches</option>
-    </select>
+    <select id = "color_selector" name="color_selector" onchange="setColorIndex()">
 
-    <!-- Rounded switch -->
-    <label class="switch">
-        Continuous Update
-        <input id="contUpdate" type="checkbox">
-        <span class="slider round"></span>
-    </label>
+        <option value="1">Black</option>
+        <option value="0">White/Eraser</option>
+    </select>
+</div>
+<div class="canvas-container">
+    <div class="container-div">
+        <div class="input-div">
+            <canvas id="TemplateCanvas" width="512" height="512"
+                    style="z-index: 0;"></canvas>
+            <canvas id="InputCanvas" width="512" height="512"
+                    style="z-index: 1;"></canvas>
+        </div>
+
+    </div>
+    <div class="container-div">
+        <div class="output-div">
+            <canvas id="OutputCanvas" width="512" height="512"></canvas>
+        </div>
+    </div>
+
 </div>
 
 </body>
@@ -50,69 +57,111 @@
 <script>
     'use strict';
 
-    let clickX = new Array();
-    let clickY = new Array();
-    let clickDrag = new Array();
-    let paint = false;
-    let lineWidth = 5;
-    const inputCanvas = getElement('InputCanvas');
-    const inputContext = inputCanvas.getContext('2d');
+    let inputCanvas, templateCanvas, stage;
+    let drawingCanvas;
+    let oldPt;
+    let oldMidPt;
+    let title;
+    let color = ['#ffffff', '#000'];
+    let colorIndex = 1;
+    let stroke = 1;
+    let colors;
+    let index;
+    let targetURL = 'http://rehket.asuscomm.com:8000/';
 
-    let timer = setInterval(function() {intervalProcess()}, 1000);
-
-    initCanvas();
-
+    // Get the models available.
+    httpGetModels('http://rehket.asuscomm.com:3000' + '/status/models');
 
 
-    // Function Definitions
+    // Get the canvas and stuff ready.
+    function init() {
+        inputCanvas = document.getElementById('InputCanvas');
+        templateCanvas = getElement('TemplateCanvas');
+        let templateContext = templateCanvas.getContext('2d');
 
-    function intervalProcess () {
-        let val = getElement('contUpdate').checked;
-        if (val) {
-            console.log(val);
-            console.log('Sending');
-            packageAndSend('http://rehket.asuscomm.com:8000')
-        }
+        templateContext.fillStyle='#fff';
 
+        templateContext.fillRect(0, 0, templateCanvas.width, templateCanvas.height);
+
+        inputCanvas.width = 512;
+        inputCanvas.height = 512;
+        index = 0;
+        colors = ['#828b20', '#b0ac31', '#b03928', '#00f47b', '#3e43dc', '#ff911e'];
+
+        //check to see if we are running in a browser with touch support
+
+        stage = new createjs.Stage(inputCanvas);
+        stage.autoClear = false;
+        stage.enableDOMEvents(true);
+
+        createjs.Touch.enable(stage);
+        createjs.Ticker.framerate = 24;
+        drawingCanvas = new createjs.Shape();
+        drawingCanvas.name = 'Drawing_Canvas';
+        stage.addEventListener('stagemousedown', handleMouseDown);
+        stage.addEventListener('stagemouseup', handleMouseUp);
+
+        stage.addChild(drawingCanvas);
+        stage.update();
+
+        // Init Page Defaults
+        setDrawSize();
+        setColorIndex();
     }
+
+    // Mouse down event
+    function handleMouseDown(event) {
+        if (!event.primary) { return; }
+        // This marks where the mouse down event happens.
+        oldPt = new createjs.Point(stage.mouseX, stage.mouseY);
+        oldMidPt = oldPt.clone();
+        stage.addEventListener("stagemousemove", handleMouseMove);
+    }
+
+    // handles mouse movement events.
+    function handleMouseMove(event) {
+        //console.log('Move Fired...' + stage.mouseX + ' ' + stage.mouseY);
+        if (!event.primary) { return; }
+        let midPt = new createjs.Point(oldPt.x + stage.mouseX >> 1, oldPt.y + stage.mouseY >> 1);
+        drawingCanvas.graphics.clear().setStrokeStyle(stroke, 'round', 'round')
+            .beginStroke(color[ colorIndex ]).moveTo(midPt.x, midPt.y)
+            .curveTo(oldPt.x, oldPt.y, oldMidPt.x, oldMidPt.y);
+
+        stage.setChildIndex(drawingCanvas, 0);
+        oldPt.x = stage.mouseX;
+        oldPt.y = stage.mouseY;
+
+        oldMidPt.x = midPt.x;
+        oldMidPt.y = midPt.y;
+
+        stage.update();
+    }
+
+    // Mouse Up
+    function handleMouseUp(event) {
+        if (!event.primary) { return; }
+        stage.removeEventListener("stagemousemove", handleMouseMove);
+    }
+
 
     // Set Draw Size
     function setDrawSize() {
-        console.log('Set the line width to: ' + lineWidth);
-        lineWidth = getElement('size_selector').value;
+        stroke = getElement('size_selector').value;
+        console.log('Set the line width to: ' + stroke);
     }
 
-    // Undo
+    // used for switching colors. Make it a json object.
+    function setColorIndex() {
+        colorIndex = getElement('color_selector').value;
+        console.log('Set the line color to: ' + color[colorIndex]);
+    }
+
+    // TODO: Undo
     function undo () {
-        if (clickX.length === 0) {
-            return;
-        }
-        for(let i = 0; i < 5; i++){
-            clickX.pop();
-            clickY.pop();
-            clickDrag.pop();
-        }
-
-        redraw();
     }
 
-    // Clear the canvas
+    // TODO: Clear the canvas
     function clearCanvas() {
-        console.log('Clear Called...');
-        inputContext.fillStyle = "white";
-        inputContext.fillRect(0,0, inputCanvas.width, inputCanvas.height);
-        clickX.length = 0;
-        clickY.length = 0;
-        clickDrag.length = 0;
-        redraw();
-    }
-
-    // Used to add elements to the drawing stack.
-    function addClick(x, y, dragging)
-    {
-        clickX.push(x);
-        clickY.push(y);
-        clickDrag.push(dragging);
     }
 
     // Helper function to get elements
@@ -132,35 +181,20 @@
         return bin;
     }
 
-    // Convert a binary string to a base 64 string.
-    //Broken for URL safe encoding????
-    function convertBinaryToBase64(binStr) {
-        console.log(binStr);
-        let myNewBinStr = [];
-        for(let i = 0; i < binStr.length; i++) {
-            myNewBinStr.push(String.fromCharCode(binStr[i]))
-        }
-        return btoa(String(myNewBinStr))
-    }
-
-
     // When the file input element calls the changed event, this function creates a new file reader,
-    // and loads the image to the canvas.
+    // and loads the image to the template canvas.
     function loadImageToCanvas(event) {
         let reader = new FileReader();
-        let myCanvas = document.getElementById('InputCanvas');
-        let myContext = myCanvas.getContext('2d');
-        // console.log('Event Fired');
-        // console.log(e);
+
         reader.onload = function(event) { // Step 2, the File Reader loads
             console.log('Reader Loaded');
             let img = new Image();
             img.onload = function () {   // Step 4, the reader loads.
                 console.log('Image Loaded');
-                myContext.drawImage(img, 0, 0, img.width, img.height, 0, 0, myCanvas.width, myCanvas.height);
-                packageImage(myCanvas);
+                let templateContext = templateCanvas.getContext('2d');
+                templateContext.drawImage(img, 0, 0, img.width, img.height, 0, 0, templateCanvas.width, templateCanvas.height);
             };
-            // console.log(e.target.result);
+
             img.src = event.target.result;  // Step 3
         };
 
@@ -169,55 +203,59 @@
     }
 
     //Downscale the image to send to the server.
-    function resizeImage( targetWidth, targetHeight) {
-        let resizedImage = document.createElement('canvas');
+    function PackAndSend( targetWidth, targetHeight) {
+        // console.log(targetWidth);
+        // console.log(targetHeight);
+        // Make a canvas element to render the resized image data to.
+        let resizedCanvas = document.createElement('canvas');
+        resizedCanvas.width = targetWidth;
+        resizedCanvas.height = targetHeight;
+        // console.log(resizedCanvas);
         let oldWidth = inputCanvas.width;
         let oldHeight = inputCanvas.height;
-        resizedImage.width = targetWidth;
-        resizedImage.height = targetHeight;
-        let resizedImageCtx = resizedImage.getContext('2d');
-        resizedImageCtx.drawImage(inputCanvas, 0, 0, oldWidth, oldHeight, 0, 0, targetWidth, targetHeight);
 
-        return resizedImage;
+        let resizedImageCtx = resizedCanvas.getContext('2d');
 
-    }
+        let img = new Image();
 
-    // This function will take a canvas element, and package the image so it can be processed by the neural network.
-    function packageImage(img) {
-        resizeImage()
-        let input = img.toDataURL("img/png");
-        //console.log('Data Url:\n' + input)
-        let base64_input = input.replace(/^data:image\/png;base64,/, "");
-        //console.log('Stripped input: ' + input);
+        // Once the image is ready, pack it up to be sent for processing.
+        img.onload = function () {
+            // console.log(img);
+            resizedImageCtx.drawImage(img , 0, 0, oldWidth, oldHeight, 0, 0, targetWidth, targetHeight);
+            // document.getElementById('body').append(resizedCanvas);
+            let target_model = document.getElementById('model_selection').value;
+            createRequest(targetURL, target_model, packageImage(resizedCanvas));
 
-        let bin_string = convertBase64ToBinary(base64_input);
-        //console.log('Binary String : ' + bin_string);
+        };
 
-        return bin_string;
+        img.src = stage.toDataURL('#ffffff', 'image/png');
     }
 
     // Create a new XMLHTTPRequest
     function createRequest(targetURL, model, data) {
         let reqInProgress = true;
 
+
+
         console.log('Request being created: ' + targetURL + '/' + model);
         let request = new XMLHttpRequest();
         //We are creating a post request that will be sent to the target model url.
-        request.open('POST', targetURL + '/' + model, true);
+        // request.open('POST', targetURL + '/' + model, true);
+        request.open('POST', 'http://rehket.asuscomm.com:8000/api/image/' , true);
 
-        request.setRequestHeader('Content-Type', 'image/png');
+        request.setRequestHeader('Content-Type', 'application/json');
 
-        request.responseType = 'arraybuffer';
+        request.responseType = 'application/json';
 
         request.timeout = 45000;
 
         request.onreadystatechange = function () {
-            if (this.readyState === 4 && this.status === 200) {
-                console.log('Request is complete!');
-                let output = new Uint8Array(this.response);
-                let output_b64 = base64ArrayBuffer(output);
+            if (this.readyState === 4 && this.status === 201) {
+
+                let result = JSON.parse(String(this.response))[0];
+                console.log(result.image);
                 let img = new Image();
-                // console.log('Output data is: ' + output_b64);
+
                 img.onload = function() {
                     // console.log('Image Loaded');
                     let resultCanvas = document.getElementById('OutputCanvas');
@@ -227,14 +265,16 @@
                 img.onerror = function() {
                     console.log('An Error occurred.');
                 };
-                // console.log("data:image\/png;base64," + output_b64);
-                img.src = "data:image\/png;base64," + output_b64;
+
+                img.src = "data:image\/png;base64," + result.image;
 
             }
         };
 
+        // console.log('Output data is: ' + data);
+        let pack = JSON.stringify([{image: data, model:document.getElementById('model_selection').value}]);
 
-        request.send(data);
+        request.send(pack);
     }
 
     // Helper function to package and send the request.
@@ -247,75 +287,19 @@
 
     }
 
+    // This function will take a canvas element, and package the image so it can be processed by the neural network.
+    // For easel.js, if the image is going to be resized, access the canvas in the stage.
+    function packageImage(img) {
+        let input = img.toDataURL("img/png");
+        //console.log('Data Url:\n' + input)
+        // let base64_input = input.replace(/^data:image\/png;base64,/, "");
+        //console.log('Stripped input: ' + input);
 
-    function reqListener () {
-        console.log(this.responseText);
+        // let bin_string = convertBase64ToBinary(base64_input);
+        //console.log('Binary String : ' + bin_string);
+
+        return input;
     }
-
-    // Initialize the canvas and add all the required event listeners.
-    function initCanvas() {
-        console.log('Canvas Initializing...');
-
-        setDrawSize();
-
-        // Mouse Move
-        inputCanvas.addEventListener('mousedown', function (event) {
-            console.log('Mouse down...');
-            let mouseX = event.pageX - this.offsetLeft;
-            let mouseY = event.pageY - this.offsetTop;
-
-            paint = true;
-            addClick(event.pageX - this.offsetLeft, event.pageY - this.offsetTop);
-            redraw();
-        });
-
-        // Mouse up
-        inputCanvas.addEventListener('mouseup', function (event) {
-            paint = false;
-        });
-
-        // Mouse Move
-        inputCanvas.addEventListener('mousemove', function (event) {
-            console.log('Mouse move...');
-            if (paint) {
-                addClick(event.pageX - this.offsetLeft, event.pageY - this.offsetTop, true)
-                redraw();
-            }
-
-        });
-        // Mouse Leave
-        inputCanvas.addEventListener('mouseleave', function (event) {
-            console.log('Mouse left...');
-            paint = false;
-        });
-
-        redraw();
-
-        console.log('Canvas Initializing Complete');
-    }
-    function redraw () {
-        console.log("Redraw fired...");
-        inputContext.fillStyle = "white";
-        inputContext.fillRect(0,0, inputCanvas.width, inputCanvas.height);
-
-        inputContext.strokeStyle = '#000000';
-        inputContext.lineJoin = 'round';
-        inputContext.lineWidth = lineWidth;
-
-        for(let i = 0; i < clickX.length; i++) {
-            inputContext.beginPath();
-            if(clickDrag[i] && i){
-                inputContext.moveTo(clickX[i-1], clickY[i-1]);
-            }else{
-                inputContext.moveTo(clickX[i]-1, clickY[i]);
-            }
-            inputContext.lineTo(clickX[i], clickY[i]);
-            inputContext.closePath();
-            inputContext.stroke();
-        }
-
-    }
-
 
 
 </script>

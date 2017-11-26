@@ -24,13 +24,13 @@ function httpGetModels(targetURL)
             let models = JSON.parse(xhr.responseText);
             // Get the selector in the document.
             let selector = document.getElementById('model_selection');
-            console.log(models);
+            // console.log(models);
 
             // Build the selector using the names and targets of the models.
             let index = 0;
             for (index; index <models.length; index ++ ){
                 let model = models[index];
-                console.log('Call ' + model['name'] + ' : ' + model['target']);
+                // console.log('Call ' + model['name'] + ' : ' + model['target']);
                 let opt = document.createElement('option');
                 opt.setAttribute('value', model['target']);
                 let text = document.createTextNode(model['name']);
