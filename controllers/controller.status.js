@@ -12,7 +12,7 @@ exports.getModels = function (req, res) {
         port: 8000
     };
 
-    console.log('Models Requested');
+    // console.log('Models Requested');
     // Get the models from the address specified in options.
     http.get(options, function(resp) {
         let data = '';
@@ -24,7 +24,7 @@ exports.getModels = function (req, res) {
         resp.on('end', function(){
             console.log(data);
             res.setHeader('Content-Type', 'application/json');
-            res.setHeader('Access-Control-Allow-Origin', '*');
+            res.setHeader('Access-Control-Allow-Origin', 'rehket.asuscomm.com');
             res.status(200);
             res.send(data);
         });

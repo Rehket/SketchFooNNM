@@ -3,8 +3,8 @@
 <head>
     <meta charset="utf-8">
     <title>Submit Images To the NN</title>
-    <link rel="stylesheet" type="text/css" href="http://rehket.asuscomm.com:3000/static/styles/main.css">
-    <script src="http://rehket.asuscomm.com:3000/static/js/base64ArrayBuffer.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://rehket.asuscomm.com:3000/static/styles/main.css">
+    <script src="https://rehket.asuscomm.com:3000/static/js/base64ArrayBuffer.js"></script>
     <script type="text/JavaScript" src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
     <script type="text/JavaScript" src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
     <script type="text/JavaScript" src="https://code.createjs.com/easeljs-0.8.2.min.js"></script>
@@ -108,7 +108,6 @@
 
                 // Requires CreateJs
                 this.stage = new createjs.Stage(this.inputCanvas);
-                console.log(this.stage);
                 this.stage.autoClear = false;
                 this.stage.enableDOMEvents(true);
 
@@ -207,7 +206,7 @@
 
         // Sets the color parameter for drawing.
         this.setStrokeColor = (color) => {
-            console.log(color);
+            console.log('Selected ' + color);
             if(color === "white") {
                 this.color = this.colors.white;
             }
@@ -255,7 +254,6 @@
         };
 
         this.setPackTemplate = () => {
-            console.log(this.packTemplateSwitch.checked);
             this.packTemplate = this.packTemplateSwitch.checked;
         };
 
@@ -311,14 +309,12 @@
 
             request.onreadystatechange = () => {
                 if (request.readyState === 4 && request.status === 201) {
-
-                    console.log(request.response);
                     let result = request.response[0];
-                    // console.log(result.image);
+
                     let img = new Image();
 
                     img.onload = () => {
-                        // console.log('Image Loaded');
+
                         this.resultContext.drawImage(img, 0, 0, img.width, img.height,
                             0, 0, this.resultCanvas.width, this.resultCanvas.height);
                     };
@@ -340,7 +336,7 @@
 
         this.getModels = () => {
             let modelRequest = new XMLHttpRequest();
-            modelRequest.open('GET', 'http://rehket.asuscomm.com:3000/status/models', true);
+            modelRequest.open('GET', 'https://rehket.asuscomm.com:3000/status/models', true);
 
             modelRequest.onreadystatechange = () => {
 

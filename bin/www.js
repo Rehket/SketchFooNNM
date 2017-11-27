@@ -6,7 +6,34 @@
 
 let app = require('../app');
 let debug = require('debug')('sketchfoonnm:server');
+let path = require('path');
 let http = require('http');
+let https = require('https');
+let fs =require('fs');
+const certsPath = path.join(__dirname, 'certs', 'server');
+const caCertsPath = path.join(__dirname, 'certs', 'ca');
+const httpPort = process.argv[3] || 4080;
+/**
+ * SSL Certificates
+ */
+
+const options = {
+    key: fs.readFileSync(path.join(certsPath, 'my-server.key.pem'))
+    /**
+     *     This certificate should be a bundle containing your server certificate and any intermediates
+     *     cat certs/cert.pem certs/chain.pem > certs/server-bundle.pem
+     */
+    , cert: fs.readFileSync(path.join(certsPath, 'my-server.crt.pem'))
+
+    /**
+     *  ca only needs to be specified for peer-certificates,
+     *  ca: [ fs.readFileSync(path.join(caCertsPath, 'my-root-ca.crt.pem')) ]
+     */
+    , requestCert: false
+    , rejectUnauthorized: true
+};
+
+
 
 /**
  * Get port from environment and store in Express.
@@ -16,17 +43,24 @@ let port = normalizePort(process.env.PORT || '3000');
 app.set('port', port);
 
 /**
- * Create HTTP server.
+ * Create HTTPs server.
  */
 
-let server = http.createServer(app);
+let server = https.createServer(options);
 
 /**
  * Listen on provided port, on all network interfaces.
  */
 
-server.listen(port);
-console.log('Listening on port ' + port);
+let host  = 'rehket.asuscomm.com';
+
+server.on('request', app);
+server.listen(port, function(){
+    port = server.address().port;
+    console.log('Listening on https://127.0.0.1:' + port);
+    console.log('Listening on https://rehket.asuscomm.com:' + port);
+});
+
 server.on('error', onError);
 server.on('listening', onListening);
 
@@ -49,6 +83,20 @@ function normalizePort(val) {
 
   return false;
 }
+
+let httpRedir = http.createServer();
+httpRedir.on('request', function(req, res){
+    res.setHeader(
+        'Location'
+        , 'https://' + req.headers.host.replace(/:\d+/, ':' + port) + req.url
+    );
+    res.statusCode = 302;
+    res.end();
+});
+
+httpRedir.listen(httpPort, function(){
+    console.log("\nRedirecting all http traffic to https\n");
+});
 
 /**
  * Event listener for HTTP server "error" event.
