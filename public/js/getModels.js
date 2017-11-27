@@ -13,7 +13,7 @@ function httpGetModels(targetURL)
     let xhr = new XMLHttpRequest(),
         method = "GET";
 
-    xhr.open(method, targetURL, true);
+    xhr.open('GET', targetURL, true);
     xhr.onreadystatechange = function () {
 
         // When the request is complete and if it was a success, get the models and...

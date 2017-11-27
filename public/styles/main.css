@@ -37,7 +37,7 @@ canvas {
     top: 0;
 }
 
-#OutputCanvas {
+#OutputCanvas, #ResultCanvas {
     position: absolute;
     right: 0;
     top: 0;
@@ -47,7 +47,7 @@ canvas {
     margin: 1em;
 }
 @media screen and (max-width: 1100px){
-    #OutputCanvas {
+    #OutputCanvas, #ResultCanvas{
         position: absolute;
         left: 0;
         top: 578px;
