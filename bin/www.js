@@ -8,7 +8,6 @@ let app = require('../app');
 let debug = require('debug')('sketchfoonnm:server');
 let path = require('path');
 let http = require('http');
-let https = require('https');
 let fs =require('fs');
 const certsPath = path.join(__dirname, 'certs', 'server');
 const caCertsPath = path.join(__dirname, 'certs', 'ca');
@@ -46,7 +45,7 @@ app.set('port', port);
  * Create HTTPs server.
  */
 
-let server = https.createServer(options);
+let server = http.createServer();
 
 /**
  * Listen on provided port, on all network interfaces.
@@ -57,8 +56,8 @@ let host  = 'rehket.asuscomm.com';
 server.on('request', app);
 server.listen(port, function(){
     port = server.address().port;
-    console.log('Listening on https://127.0.0.1:' + port);
-    console.log('Listening on https://rehket.asuscomm.com:' + port);
+    console.log('Listening on http://127.0.0.1:' + port);
+    console.log('Listening on http://rehket.asuscomm.com:' + port);
 });
 
 server.on('error', onError);
@@ -83,20 +82,6 @@ function normalizePort(val) {
 
   return false;
 }
-
-let httpRedir = http.createServer();
-httpRedir.on('request', function(req, res){
-    res.setHeader(
-        'Location'
-        , 'https://' + req.headers.host.replace(/:\d+/, ':' + port) + req.url
-    );
-    res.statusCode = 302;
-    res.end();
-});
-
-httpRedir.listen(httpPort, function(){
-    console.log("\nRedirecting all http traffic to https\n");
-});
 
 /**
  * Event listener for HTTP server "error" event.

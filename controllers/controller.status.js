@@ -22,7 +22,6 @@ exports.getModels = function (req, res) {
         });
 
         resp.on('end', function(){
-            console.log(data);
             res.setHeader('Content-Type', 'application/json');
             res.setHeader('Access-Control-Allow-Origin', 'rehket.asuscomm.com');
             res.status(200);
