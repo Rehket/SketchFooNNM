@@ -23,7 +23,7 @@ exports.getModels = function (req, res) {
 
         resp.on('end', function(){
             res.setHeader('Content-Type', 'application/json');
-            res.setHeader('Access-Control-Allow-Origin', 'rehket.asuscomm.com');
+            res.setHeader('Access-Control-Allow-Origin', '*');
             res.status(200);
             res.send(data);
         });

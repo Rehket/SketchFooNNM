@@ -3,8 +3,8 @@
 <head>
     <meta charset="utf-8">
     <title>Submit Images To the NN</title>
-    <link rel="stylesheet" type="text/css" href="https://rehket.asuscomm.com:3000/static/styles/main.css">
-    <script src="https://rehket.asuscomm.com:3000/static/js/base64ArrayBuffer.js"></script>
+    <link rel="stylesheet" type="text/css" href="http://rehket.asuscomm.com:3001/static/styles/main.css">
+    <script src="http://rehket.asuscomm.com:3001/static/js/base64ArrayBuffer.js"></script>
     <script type="text/JavaScript" src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
     <script type="text/JavaScript" src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
     <script type="text/JavaScript" src="https://code.createjs.com/easeljs-0.8.2.min.js"></script>
@@ -336,7 +336,7 @@
 
         this.getModels = () => {
             let modelRequest = new XMLHttpRequest();
-            modelRequest.open('GET', 'https://rehket.asuscomm.com:3000/status/models', true);
+            modelRequest.open('GET', 'http://rehket.asuscomm.com:3001/status/models', true);
 
             modelRequest.onreadystatechange = () => {
 
